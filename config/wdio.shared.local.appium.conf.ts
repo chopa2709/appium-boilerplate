@@ -19,8 +19,6 @@ export const config: Omit<WebdriverIO.Config, 'capabilities'> = {
                     // This is needed to tell Appium that we can execute local ADB commands
                     // and to automatically download the latest version of ChromeDriver
                     relaxedSecurity: true,
-                    // Write the Appium logs to a file in the root of the directory
-                    log: './logs/appium.log',
                 },
             },
         ],
