@@ -25,10 +25,10 @@ export const config: WebdriverIO.Config = {
 
             //
             // NOTE: Change this name according to the Emulator you have created on your local machine
-            "appium:deviceName": "Pixel_7_Pro_Android_14_API_34",
+            "appium:deviceName": "emulator-5554",
             //
             // NOTE: Change this version according to the Emulator you have created on your local machine
-            "appium:platformVersion": "14.0",
+            "appium:platformVersion": "17",
             "appium:automationName": "UiAutomator2",
             "appium:orientation": "PORTRAIT",
             "appium:newCommandTimeout": 240,
