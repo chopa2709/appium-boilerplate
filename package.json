@@ -26,6 +26,7 @@
     ],
     "type": "module",
     "scripts": {
+        "postinstall": "node scripts/patch-unicorn-magic.mjs",
         "android.app": "wdio run config/wdio.android.app.conf.ts",
         "android.app.cucumber": "wdio run config/wdio.android.app.cucumber.conf.ts",
         "android.browser": "wdio run config/wdio.android.browser.conf.ts",
