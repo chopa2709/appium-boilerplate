@@ -44,18 +44,8 @@ export const config: WebdriverIO.Config = {
     //
     // Level of logging verbosity: trace | debug | info | warn | error | silent
     logLevel: 'debug',
-    // Set specific log levels per logger
-    // loggers:
-    // - webdriver, webdriverio
-    // - @wdio/applitools-service, @wdio/browserstack-service, @wdio/devtools-service, @wdio/sauce-service
-    // - @wdio/mocha-framework, @wdio/jasmine-framework
-    // - @wdio/local-runner
-    // - @wdio/sumologic-reporter
-    // - @wdio/cli, @wdio/config, @wdio/utils
-    // Level of logging verbosity: trace | debug | info | warn | error | silent
     // logLevels: {
     //     webdriver: 'info',
-    //     '@wdio/applitools-service': 'info'
     // },
     //
     // If you only want to run your tests until a specific amount of tests have failed use
@@ -82,11 +72,7 @@ export const config: WebdriverIO.Config = {
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
     //
-    // Services are empty here but will be defined in the
-    // - wdio.shared.browserstack.conf.ts
-    // - wdio.shared.local.appium.conf.ts
-    // - wdio.shared.sauce.conf.ts
-    // configuration files
+    // Services are empty here but will be defined in wdio.shared.local.appium.conf.ts
     services: [],
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
