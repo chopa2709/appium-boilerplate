@@ -17,3 +17,7 @@ apps/
 chromeDriver
 .tmp
 *.mp4
+
+# allure
+allure-results/
+allure-report/
