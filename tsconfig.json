@@ -14,7 +14,6 @@
             "@wdio/globals/types",
             "@wdio/mocha-framework",
             "expect-webdriverio",
-            "@wdio/sauce-service",
         ]
     },
     "include": [
