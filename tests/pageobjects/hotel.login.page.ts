@@ -31,7 +31,9 @@ class HotelLoginPage extends Page {
         const resized = await sharp(original)
             .resize(Math.round(width! / 2), Math.round(height! / 2))
             .toBuffer();
-        AllureReporter.addAttachment(name, resized, 'image/png');
+        const base64 = resized.toString('base64');
+        const html = `<img src="data:image/png;base64,${base64}" style="max-width:360px;height:auto;" />`;
+        AllureReporter.addAttachment(name, html, 'text/html');
     }
 
     private async clearSession () {
