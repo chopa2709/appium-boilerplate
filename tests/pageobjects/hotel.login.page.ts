@@ -1,4 +1,5 @@
 import AllureReporter from '@wdio/allure-reporter';
+import sharp from 'sharp';
 import Page from './page.js';
 
 class HotelLoginPage extends Page {
@@ -25,7 +26,12 @@ class HotelLoginPage extends Page {
 
     async takeScreenshot (name: string) {
         const screenshot = await browser.takeScreenshot();
-        AllureReporter.addAttachment(name, Buffer.from(screenshot, 'base64'), 'image/png');
+        const original = Buffer.from(screenshot, 'base64');
+        const { width, height } = await sharp(original).metadata();
+        const resized = await sharp(original)
+            .resize(Math.round(width! / 2), Math.round(height! / 2))
+            .toBuffer();
+        AllureReporter.addAttachment(name, resized, 'image/png');
     }
 
     private async clearSession () {

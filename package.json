@@ -37,6 +37,7 @@
         "appium:inspector": "npx start-appium-inspector"
     },
     "devDependencies": {
+        "@types/sharp": "^0.31.1",
         "@typescript-eslint/eslint-plugin": "^8.50.1",
         "@typescript-eslint/parser": "^8.50.1",
         "@wdio/allure-reporter": "^9.27.0",
@@ -51,6 +52,7 @@
         "appium-uiautomator2-driver": "^6.7.6",
         "appium-xcuitest-driver": "^10.13.2",
         "eslint-plugin-wdio": "^9.16.2",
+        "sharp": "^0.34.5",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3"
     }
