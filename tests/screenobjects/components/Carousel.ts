@@ -1,28 +1,28 @@
-import type { RectReturn } from "@wdio/protocols";
+import type { RectReturn } from '@wdio/protocols';
 
 let CAROUSEL_RECTANGLES: RectReturn;
 
 class Carousel {
     get carousel() {
-        return $(this.locatorStrategy("Carousel"));
+        return $(this.locatorStrategy('Carousel'));
     }
     get openSourceCard() {
-        return $(this.locatorStrategy("__CAROUSEL_ITEM_0__"));
+        return $(this.locatorStrategy('__CAROUSEL_ITEM_0__'));
     }
     get communityCard() {
-        return $(this.locatorStrategy("__CAROUSEL_ITEM_1__"));
+        return $(this.locatorStrategy('__CAROUSEL_ITEM_1__'));
     }
     get jsFoundationCard() {
-        return $(this.locatorStrategy("__CAROUSEL_ITEM_2__"));
+        return $(this.locatorStrategy('__CAROUSEL_ITEM_2__'));
     }
     get supportVideosCard() {
-        return $(this.locatorStrategy("__CAROUSEL_ITEM_3__"));
+        return $(this.locatorStrategy('__CAROUSEL_ITEM_3__'));
     }
     get extendableCard() {
-        return $(this.locatorStrategy("__CAROUSEL_ITEM_4__"));
+        return $(this.locatorStrategy('__CAROUSEL_ITEM_4__'));
     }
     get compatibleCard() {
-        return $(this.locatorStrategy("__CAROUSEL_ITEM_5__"));
+        return $(this.locatorStrategy('__CAROUSEL_ITEM_5__'));
     }
 
     private locatorStrategy(selector: string): string {
@@ -73,7 +73,7 @@ class Carousel {
     async swipeLeft() {
         // This uses the "new" `swipe` method that now supports native apps
         await driver.swipe({
-            direction: "left",
+            direction: 'left',
             scrollableElement: this.carousel,
             percent: 0.8,
         });
@@ -85,7 +85,7 @@ class Carousel {
     async swipeRight() {
         // This uses the "new" `swipe` method that now supports native apps
         await driver.swipe({
-            direction: "right",
+            direction: 'right',
             scrollableElement: this.carousel,
             percent: 0.8,
         });

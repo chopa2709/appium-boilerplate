@@ -116,7 +116,7 @@ class AndroidSettings {
                 await $('android=new UiSelector().descriptionContains("Dismiss")').click();
                 await $('android=new UiSelector().textMatches("(?i)Dismiss")').click();
             }
-        } catch (ign) { /* do nothing */ }
+        } catch { /* do nothing */ }
     }
 
     /**

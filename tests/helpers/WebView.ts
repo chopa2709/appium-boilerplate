@@ -88,8 +88,7 @@ class WebView {
                     // app identifier. In this case it is 'process-wdiodemoapp'. We also needed to add `"appium:additionalWebviewBundleIds": ["*"],`
                     // to the caps to find the webview
                     'process-wdiodemoapp' :
-                    await driver.getCurrentPackage()
-
+                    await driver.getCurrentPackage();
 
                 return currentContexts.length > 1 &&
                     currentContexts.find(context => {
@@ -100,7 +99,7 @@ class WebView {
                                 webviewName =  (context as IosContext).id;
                             }
 
-                            return foundContext
+                            return foundContext;
                         }
 
                         // Also check that the matching page is not empty

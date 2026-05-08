@@ -96,9 +96,9 @@ export const config: WebdriverIO.Config = {
     reporters: [
         'spec',
         ['allure', {
-          outputDir: 'allure-results',
+            outputDir: 'allure-results',
         }]
-      ],
+    ],
     // Options to be passed to Mocha.
     mochaOpts: {
         ui: 'bdd',

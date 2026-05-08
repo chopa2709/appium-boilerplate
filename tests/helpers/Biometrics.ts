@@ -46,7 +46,7 @@ class Biometrics {
             try {
                 await this.iosAllowBiometry.waitForDisplayed({ timeout: 3 * 1000 });
                 await this.allowBiometry.click();
-            } catch (e) {
+            } catch {
                 // This means that allow using touch/facID has already been accepted and thus the alert is not shown
             }
         });

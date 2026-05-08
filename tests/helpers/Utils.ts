@@ -1,4 +1,4 @@
-import { BUNDLE_ID } from "./Constants.js";
+import { BUNDLE_ID } from './Constants.js';
 
 /**
  * Get the time difference in seconds
@@ -82,7 +82,7 @@ export async function openDeepLinkUrl(url:string) {
         // Assumption is made that the alert will be seen within 2 seconds, if not it did not appear
         await openButton.waitForDisplayed({ timeout: 2000 });
         await openButton.click();
-    } catch (e) {
+    } catch {
         // ignore
     }
 }
@@ -135,7 +135,7 @@ export async function executeInHomeScreenContext(action:() => Promise<void>): Pr
     try {
         // Execute the action in the home screen context
         result = await action();
-    } catch (e) {
+    } catch {
         // Ignore any exceptions during the action
     }
 

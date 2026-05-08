@@ -30,7 +30,7 @@ class FormsScreen extends AppScreen {
     async tapOnDropDown() {
         // The tap action on the complete dropdown doesn't work on iOS, we need to
         // tap on the chevron to open it
-        if(driver.isIOS) {
+        if (driver.isIOS) {
             return await this.dropDownChevron.click();
         }
 
