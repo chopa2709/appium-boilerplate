@@ -51,8 +51,31 @@ describe('ホテルサイト ログイン', () => {
     });
 
     it('メールアドレスが空のままログインするとエラーが表示される', async () => {
-        await HotelLoginPage.open();
+        // 1. トップページにアクセス
+        await HotelLoginPage.openTopPage();
+
+        // 2. スクリーンショット
+        await HotelLoginPage.takeScreenshot('1_トップページ');
+
+        // 3. ヘッダーのナビメニューを開く
+        await HotelLoginPage.navMenuButton.click();
+
+        // 4. ログインリンクを押下
+        await HotelLoginPage.loginLink.waitForDisplayed({ timeout: 5000 });
+        await HotelLoginPage.loginLink.click();
+
+        // ログインフォームが表示されるまで待機
+        await HotelLoginPage.email.waitForDisplayed({ timeout: 10000 });
+
+        // 5. スクリーンショット
+        await HotelLoginPage.takeScreenshot('2_ログインページ');
+
+        // 6-7. パスワードのみ入力してログイン（メールアドレスは空）
         await HotelLoginPage.login({ email: '', password: 'pa55w0rd!' });
+
+        // 8. スクリーンショット
+        await HotelLoginPage.takeScreenshot('3_エラー表示');
+
         await expect(HotelLoginPage.emailError).toBeDisplayed();
     });
 
