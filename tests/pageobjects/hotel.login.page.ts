@@ -6,7 +6,7 @@ class HotelLoginPage extends Page {
     // ログインフォーム
     get email () { return $('#email'); }
     get password () { return $('#password'); }
-    get loginButton () { return $('#login-button'); }
+    get loginButton () { return $('//button[text()="ログイン"]'); }
     get emailError () { return $('#email-message'); }
     get passwordError () { return $('#password-message'); }
 
@@ -19,7 +19,7 @@ class HotelLoginPage extends Page {
         await this.email.setValue(email);
         await this.password.setValue(password);
         if (driver.isMobile) {
-            await $('h2').click();
+            await driver.hideKeyboard();
         }
         await this.loginButton.click();
     }
