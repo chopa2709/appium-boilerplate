@@ -25,8 +25,6 @@ class HotelLoginPage extends Page {
     }
 
     async takeScreenshot (name: string) {
-        // CI 環境ではエミュレーターのメモリ不足で Chrome がクラッシュするためスキップ
-        if (process.env.CI) return;
         const screenshot = await browser.takeScreenshot();
         const original = Buffer.from(screenshot, 'base64');
         const { width, height } = await sharp(original).metadata();
