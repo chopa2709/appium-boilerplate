@@ -26,7 +26,7 @@
     ],
     "type": "module",
     "scripts": {
-        "postinstall": "node scripts/patch-unicorn-magic.mjs",
+        "postinstall": "node scripts/patch-unicorn-magic.mjs && node scripts/patch-webdriver.mjs",
         "android.app": "wdio run config/wdio.android.app.conf.ts",
         "android.browser": "wdio run config/wdio.android.browser.conf.ts",
         "android.hotel": "wdio run config/wdio.android.hotel.conf.ts",
