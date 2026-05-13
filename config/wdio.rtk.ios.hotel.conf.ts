@@ -8,7 +8,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const RTK_USERNAME    = process.env.RTK_USERNAME    ?? '';
+const RTK_USERNAME    = process.env.RTK_USERNAME    ?? 'ta_trial';
 const RTK_ACCESSTOKEN = process.env.RTK_ACCESSTOKEN ?? 'TUX1uwFRt60Y4CZsWPgVSIOjQCgcOksDDSnh40t81bmVhyzGCbvyo5F2AGa2sz9M';
 
 export const config: WebdriverIO.Config = {
