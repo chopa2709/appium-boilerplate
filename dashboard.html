@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>テスト実行ダッシュボード</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 24px; }
+
+    .container { max-width: 680px; margin: 0 auto; }
+
+    h1 { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 4px; }
+    .subtitle { font-size: 0.875rem; color: #6b7280; margin-bottom: 32px; }
+
+    .card { background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 20px; }
+
+    .card h2 { font-size: 0.8rem; font-weight: 600; color: #6b7280;
+               text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+
+    .token-row { display: flex; gap: 8px; }
+    .token-row input { flex: 1; padding: 8px 12px; border: 1px solid #d1d5db;
+                       border-radius: 8px; font-size: 0.875rem; font-family: monospace; }
+    .token-row input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px #e0e7ff; }
+    .btn-save { padding: 8px 16px; background: #f9fafb; border: 1px solid #d1d5db;
+                border-radius: 8px; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+    .btn-save:hover { background: #f3f4f6; }
+
+    .btn-run { width: 100%; padding: 14px; background: #4f46e5; color: #fff;
+               border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+               cursor: pointer; transition: background .15s; display: flex;
+               align-items: center; justify-content: center; gap: 10px; }
+    .btn-run:hover:not(:disabled) { background: #4338ca; }
+    .btn-run:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+    /* spinner */
+    .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.4);
+               border-top-color: #fff; border-radius: 50%;
+               animation: spin .7s linear infinite; display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .running .spinner { display: block; }
+
+    /* status box */
+    #status { display: none; }
+    #status.visible { display: block; }
+
+    .status-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-running  { background: #fef9c3; color: #854d0e; }
+    .badge-success  { background: #dcfce7; color: #166534; }
+    .badge-failure  { background: #fee2e2; color: #991b1b; }
+    .badge-unknown  { background: #f3f4f6; color: #374151; }
+
+    .progress-msg { font-size: 0.875rem; color: #6b7280; }
+
+    .links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .link-btn { display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+                border-radius: 8px; text-decoration: none; font-size: 0.875rem;
+                font-weight: 500; border: 1px solid transparent; transition: opacity .15s; }
+    .link-btn:hover { opacity: .85; }
+    .link-btn-allure { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .link-btn-diff   { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+    .link-btn-run    { background: #faf5ff; color: #7e22ce; border-color: #e9d5ff; }
+    .link-icon { font-size: 1.1rem; }
+
+    .log-area { margin-top: 16px; background: #1e1e2e; border-radius: 8px;
+                padding: 14px; font-family: monospace; font-size: 0.78rem;
+                color: #a6e3a1; max-height: 180px; overflow-y: auto; }
+    .log-line { line-height: 1.6; }
+    .log-line.error { color: #f38ba8; }
+    .log-line.info  { color: #89b4fa; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>テスト実行ダッシュボード</h1>
+  <p class="subtitle">chopa2709/appium-boilerplate &nbsp;·&nbsp; iOS Hotel Tests (Remote TestKit)</p>
+
+  <!-- Token -->
+  <div class="card">
+    <h2>GitHub Personal Access Token</h2>
+    <div class="token-row">
+      <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      <button class="btn-save" onclick="saveToken()">保存</button>
+    </div>
+  </div>
+
+  <!-- Run button -->
+  <div class="card">
+    <button class="btn-run" id="run-btn" onclick="runTests()">
+      <div class="spinner" id="spinner"></div>
+      <span id="run-label">▶ テスト実行</span>
+    </button>
+  </div>
+
+  <!-- Status -->
+  <div class="card" id="status">
+    <div class="status-header">
+      <span class="badge" id="badge">-</span>
+      <span class="progress-msg" id="progress-msg"></span>
+    </div>
+    <div class="links" id="links"></div>
+    <div class="log-area" id="log"></div>
+  </div>
+</div>
+
+<script>
+const OWNER    = 'chopa2709';
+const REPO     = 'appium-boilerplate';
+const WORKFLOW = 'e2e-android-hotel.yml';
+const ALLURE_URL = 'https://chopa2709.github.io/appium-boilerplate/';
+const DIFF_URL   = 'screenshot-diff.html';
+
+// ── token ────────────────────────────────────────────────────────────────────
+const tokenInput = document.getElementById('token');
+const saved = localStorage.getItem('gh-token');
+if (saved) tokenInput.value = saved;
+
+function saveToken() {
+  localStorage.setItem('gh-token', tokenInput.value.trim());
+  tokenInput.style.borderColor = '#4ade80';
+  setTimeout(() => tokenInput.style.borderColor = '', 1500);
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function log(msg, cls = '') {
+  const area = document.getElementById('log');
+  const el = document.createElement('div');
+  el.className = 'log-line' + (cls ? ' ' + cls : '');
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+function setStatus(text, badgeClass, msg = '') {
+  const badge = document.getElementById('badge');
+  badge.textContent = text;
+  badge.className = 'badge ' + badgeClass;
+  document.getElementById('progress-msg').textContent = msg;
+  document.getElementById('status').className = 'card visible';
+}
+
+function setLinks(runUrl, showDiff) {
+  const area = document.getElementById('links');
+  area.innerHTML = '';
+
+  const allure = document.createElement('a');
+  allure.href = ALLURE_URL;
+  allure.target = '_blank';
+  allure.className = 'link-btn link-btn-allure';
+  allure.innerHTML = '<span class="link-icon">📊</span> Allure レポートを開く';
+  area.appendChild(allure);
+
+  if (showDiff) {
+    const diff = document.createElement('a');
+    diff.href = DIFF_URL;
+    diff.target = '_blank';
+    diff.className = 'link-btn link-btn-diff';
+    diff.innerHTML = '<span class="link-icon">🖼️</span> スクリーンショット比較を開く';
+    area.appendChild(diff);
+  }
+
+  if (runUrl) {
+    const run = document.createElement('a');
+    run.href = runUrl;
+    run.target = '_blank';
+    run.className = 'link-btn link-btn-run';
+    run.innerHTML = '<span class="link-icon">⚙️</span> GitHub Actions ログを開く';
+    area.appendChild(run);
+  }
+}
+
+function ghFetch(token, path, opts = {}) {
+  return fetch(`https://api.github.com${path}`, {
+    ...opts,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers ?? {}),
+    },
+  });
+}
+
+// ── main ─────────────────────────────────────────────────────────────────────
+async function runTests() {
+  const token = tokenInput.value.trim();
+  if (!token) { alert('GitHub Token を入力してください'); return; }
+  localStorage.setItem('gh-token', token);
+
+  const btn       = document.getElementById('run-btn');
+  const spinner   = document.getElementById('spinner');
+  const runLabel  = document.getElementById('run-label');
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('links').innerHTML = '';
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  runLabel.textContent = '実行中…';
+
+  try {
+    // 1. ワークフロー起動
+    const triggerTime = new Date().toISOString();
+    setStatus('実行中', 'badge-running', 'ワークフローを起動しています…');
+    log('ワークフロー dispatch 送信中…', 'info');
+
+    const dispatchRes = await ghFetch(token,
+      `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: 'main' }),
+      }
+    );
+    if (!dispatchRes.ok) {
+      const msg = await dispatchRes.text();
+      throw new Error(`dispatch 失敗 (${dispatchRes.status}): ${msg}`);
+    }
+    log('ワークフロー起動しました。実行開始を待っています…', 'info');
+
+    // 2. Run が作られるまで待つ（最大30秒）
+    let run = null;
+    for (let i = 0; i < 12; i++) {
+      await sleep(5000);
+      const res = await ghFetch(token,
+        `/repos/${OWNER}/${REPO}/actions/runs?workflow_id=${WORKFLOW}&per_page=5`
+      );
+      const data = await res.json();
+      run = (data.workflow_runs ?? []).find(r => r.created_at >= triggerTime);
+      if (run) { log(`実行検出: #${run.run_number} (${run.html_url})`, 'info'); break; }
+      log('実行待機中…');
+    }
+    if (!run) throw new Error('実行を検出できませんでした（タイムアウト）');
+
+    // 3. 完了まで5秒ごとにポーリング
+    while (run.status !== 'completed') {
+      setStatus('実行中', 'badge-running', `ステータス: ${run.status} — #${run.run_number}`);
+      log(`ポーリング中… status=${run.status}`);
+      await sleep(5000);
+      const res = await ghFetch(token, `/repos/${OWNER}/${REPO}/actions/runs/${run.id}`);
+      run = await res.json();
+    }
+
+    // 4. 結果表示
+    const ok = run.conclusion === 'success';
+    setStatus(
+      ok ? '✅ 成功' : '❌ 失敗',
+      ok ? 'badge-success' : 'badge-failure',
+      `実行 #${run.run_number} — ${run.conclusion}`
+    );
+    log(`完了: conclusion=${run.conclusion}`, ok ? '' : 'error');
+    setLinks(run.html_url, true);
+
+  } catch (e) {
+    setStatus('⚠️ エラー', 'badge-unknown', e.message);
+    log(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    runLabel.textContent = '▶ テスト実行';
+  }
+}
+</script>
+</body>
+</html>
