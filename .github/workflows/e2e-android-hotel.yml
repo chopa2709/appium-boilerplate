@@ -1,4 +1,4 @@
-name: Android Hotel Tests
+name: iOS Hotel Tests (Remote TestKit)
 
 on:
   push:
@@ -24,27 +24,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Run hotel tests on Android emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_6
-          script: npm run android.hotel
+      - name: Run hotel tests on iOS (Remote TestKit)
+        run: npm run rtk.ios.hotel
         env:
-          APPIUM_DEVICE_NAME: emulator-5554
-          APPIUM_PLATFORM_VERSION: '15'
+          RTK_USERNAME: ${{ secrets.RTK_USERNAME }}
+          RTK_ACCESSTOKEN: ${{ secrets.RTK_ACCESSTOKEN }}
 
       - name: Generate Allure report
         if: always()
-        run: ./node_modules/.bin/allure generate allure-results --clean -o allure-report
+        run: ./node_modules/.bin/allure generate allure-results-ios-* --clean -o allure-report
 
       - name: Deploy to GitHub Pages
         if: always() && github.ref == 'refs/heads/main'
