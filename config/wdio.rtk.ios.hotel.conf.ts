@@ -1,7 +1,15 @@
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config as baseConfig } from './wdio.shared.conf.js';
+import { RtkDeviceService } from './rtk-device.service.js';
 
 // Remote TestKit は自己署名証明書を使用しているため SSL 検証をスキップ
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const RTK_USERNAME    = process.env.RTK_USERNAME    ?? '';
+const RTK_ACCESSTOKEN = process.env.RTK_ACCESSTOKEN ?? 'TUX1uwFRt60Y4CZsWPgVSIOjQCgcOksDDSnh40t81bmVhyzGCbvyo5F2AGa2sz9M';
 
 export const config: WebdriverIO.Config = {
     ...baseConfig,
@@ -20,19 +28,27 @@ export const config: WebdriverIO.Config = {
 
     specs: ['../tests/specs/**/hotel.*.spec.ts'],
 
+    services: [
+        [RtkDeviceService, {
+            username:     RTK_USERNAME,
+            accessToken:  RTK_ACCESSTOKEN,
+            baseUrl:      'https://rtk-ap001.dh-testing.com',
+            os:           'IOS',
+            priorityFile: join(__dirname, 'rtk-devices.ios.json'),
+        }] as any,
+    ],
+
     // validateCapabilities は node_modules/webdriver/build/node.js にパッチ済み:
     // accessToken / userName / password を W3C バリデーション対象外に除外している
+    // appium:deviceName / platformVersion / udid は RtkDeviceService が onPrepare で設定する
     capabilities: [
         {
             platformName: 'iOS',
             browserName: 'Safari',
             'wdio:maxInstances': 1,
             'appium:automationName': 'XCUITest',
-            'appium:deviceName': 'iPhone 11',
-            'appium:platformVersion': '18.5',
-            'appium:udid': '00008030-000A74EA3A80802E',
             'appium:newCommandTimeout': 240,
-            accessToken: 'TUX1uwFRt60Y4CZsWPgVSIOjQCgcOksDDSnh40t81bmVhyzGCbvyo5F2AGa2sz9M',
+            accessToken: RTK_ACCESSTOKEN,
         } as WebdriverIO.Capabilities,
     ],
 };
