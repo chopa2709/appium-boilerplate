@@ -15,10 +15,19 @@ const ROOT = join(fileURLToPath(import.meta.url), '..', '..');
 
 // ── ディレクトリ解決 ──────────────────────────────────────────────────────────
 
+function hasScreenshots(dirName) {
+    const fullPath = join(ROOT, dirName);
+    try {
+        return readdirSync(fullPath).some(f => f.endsWith('-result.json'));
+    } catch {
+        return false;
+    }
+}
+
 function findRecentDirs() {
     const entries = readdirSync(ROOT, { withFileTypes: true });
     return entries
-        .filter(e => e.isDirectory() && e.name.startsWith('allure-results-ios-'))
+        .filter(e => e.isDirectory() && e.name.startsWith('allure-results-ios-') && hasScreenshots(e.name))
         .map(e => e.name)
         .sort();
 }
@@ -32,7 +41,7 @@ if (arg1 && arg2) {
 } else {
     const dirs = findRecentDirs();
     if (dirs.length < 2) {
-        console.error('allure-results-ios-* ディレクトリが2つ以上必要です');
+        console.error('スクリーンショットを含む allure-results-ios-* ディレクトリが2つ以上必要です');
         process.exit(1);
     }
     prevDir = join(ROOT, dirs[dirs.length - 2]);
