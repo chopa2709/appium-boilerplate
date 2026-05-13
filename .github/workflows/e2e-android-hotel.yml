@@ -31,6 +31,14 @@ jobs:
           RTK_USERNAME: ${{ secrets.RTK_USERNAME }}
           RTK_ACCESSTOKEN: ${{ secrets.RTK_ACCESSTOKEN }}
 
+      - name: Upload allure results as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-ios
+          path: allure-results-ios-*
+          retention-days: 30
+
       - name: Generate Allure report
         if: always()
         run: ./node_modules/.bin/allure generate allure-results-ios-* --clean -o allure-report

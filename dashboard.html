@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>テスト実行ダッシュボード</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 24px; }
@@ -14,7 +15,6 @@
 
     .card { background: #fff; border-radius: 12px; padding: 24px;
             box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 20px; }
-
     .card h2 { font-size: 0.8rem; font-weight: 600; color: #6b7280;
                text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
 
@@ -33,14 +33,18 @@
     .btn-run:hover:not(:disabled) { background: #4338ca; }
     .btn-run:disabled { background: #a5b4fc; cursor: not-allowed; }
 
-    /* spinner */
+    .btn-compare { width: 100%; padding: 14px; background: #059669; color: #fff;
+                   border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+                   cursor: pointer; transition: background .15s; display: flex;
+                   align-items: center; justify-content: center; gap: 10px; }
+    .btn-compare:hover:not(:disabled) { background: #047857; }
+    .btn-compare:disabled { background: #6ee7b7; cursor: not-allowed; }
+
     .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.4);
                border-top-color: #fff; border-radius: 50%;
                animation: spin .7s linear infinite; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .running .spinner { display: block; }
 
-    /* status box */
     #status { display: none; }
     #status.visible { display: block; }
 
@@ -50,16 +54,14 @@
     .badge-success  { background: #dcfce7; color: #166534; }
     .badge-failure  { background: #fee2e2; color: #991b1b; }
     .badge-unknown  { background: #f3f4f6; color: #374151; }
-
     .progress-msg { font-size: 0.875rem; color: #6b7280; }
 
     .links { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
     .link-btn { display: flex; align-items: center; gap: 10px; padding: 12px 16px;
                 border-radius: 8px; text-decoration: none; font-size: 0.875rem;
-                font-weight: 500; border: 1px solid transparent; transition: opacity .15s; }
+                font-weight: 500; border: 1px solid transparent; transition: opacity .15s; cursor: pointer; }
     .link-btn:hover { opacity: .85; }
     .link-btn-allure { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-    .link-btn-diff   { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
     .link-btn-run    { background: #faf5ff; color: #7e22ce; border-color: #e9d5ff; }
     .link-icon { font-size: 1.1rem; }
 
@@ -69,6 +71,38 @@
     .log-line { line-height: 1.6; }
     .log-line.error { color: #f38ba8; }
     .log-line.info  { color: #89b4fa; }
+
+    /* ── 比較オーバーレイ ── */
+    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+               z-index: 100; overflow-y: auto; padding: 40px 24px; }
+    #overlay.visible { display: block; }
+    .overlay-inner { max-width: 1200px; margin: 0 auto; background: #fff;
+                     border-radius: 16px; padding: 32px; }
+    .overlay-header { display: flex; justify-content: space-between; align-items: center;
+                      margin-bottom: 24px; }
+    .overlay-header h2 { font-size: 1.2rem; }
+    .overlay-meta { font-size: 0.8rem; color: #6b7280; margin-top: 4px; }
+    .btn-close { padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db;
+                 border-radius: 8px; cursor: pointer; font-size: 0.875rem; }
+    .btn-close:hover { background: #e5e7eb; }
+
+    .compare-section { margin-bottom: 32px; }
+    .compare-section h3 { font-size: 0.95rem; padding-bottom: 8px;
+                          border-bottom: 2px solid #e5e7eb; margin-bottom: 16px; }
+    .compare-table { width: 100%; border-collapse: collapse; }
+    .compare-table th { background: #f9fafb; font-size: 0.78rem; color: #374151;
+                        padding: 8px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .compare-table th:nth-child(2) { background: #eff6ff; color: #1d4ed8; }
+    .compare-table th:nth-child(3) { background: #f0fdf4; color: #15803d; }
+    .compare-table td { padding: 6px; vertical-align: top; }
+    .compare-table td.step-label { font-size: 0.78rem; color: #6b7280; white-space: nowrap;
+                                   width: 130px; border-right: 1px solid #f3f4f6; padding: 8px; }
+    .compare-table td.shot { width: calc((100% - 130px) / 2); }
+    .compare-table td.shot img { width: 100%; height: auto; border-radius: 4px;
+                                 border: 1px solid #e5e7eb; display: block; }
+    .missing { font-size: 0.78rem; color: #9ca3af; padding: 20px; text-align: center;
+               border: 1px dashed #d1d5db; border-radius: 4px; }
+    .compare-loading { text-align: center; padding: 60px; color: #6b7280; font-size: 0.95rem; }
   </style>
 </head>
 <body>
@@ -76,7 +110,6 @@
   <h1>テスト実行ダッシュボード</h1>
   <p class="subtitle">chopa2709/appium-boilerplate &nbsp;·&nbsp; iOS Hotel Tests (Remote TestKit)</p>
 
-  <!-- Token -->
   <div class="card">
     <h2>GitHub Personal Access Token</h2>
     <div class="token-row">
@@ -85,15 +118,20 @@
     </div>
   </div>
 
-  <!-- Run button -->
   <div class="card">
     <button class="btn-run" id="run-btn" onclick="runTests()">
-      <div class="spinner" id="spinner"></div>
+      <div class="spinner" id="run-spinner"></div>
       <span id="run-label">▶ テスト実行</span>
     </button>
   </div>
 
-  <!-- Status -->
+  <div class="card">
+    <button class="btn-compare" id="cmp-btn" onclick="openComparison()">
+      <div class="spinner" id="cmp-spinner"></div>
+      <span id="cmp-label">🖼️ スクリーンショット比較（最新2件）</span>
+    </button>
+  </div>
+
   <div class="card" id="status">
     <div class="status-header">
       <span class="badge" id="badge">-</span>
@@ -104,14 +142,27 @@
   </div>
 </div>
 
+<!-- 比較オーバーレイ -->
+<div id="overlay">
+  <div class="overlay-inner">
+    <div class="overlay-header">
+      <div>
+        <h2>スクリーンショット比較</h2>
+        <div class="overlay-meta" id="cmp-meta"></div>
+      </div>
+      <button class="btn-close" onclick="closeOverlay()">✕ 閉じる</button>
+    </div>
+    <div id="cmp-body"><div class="compare-loading">読み込み中…</div></div>
+  </div>
+</div>
+
 <script>
 const OWNER    = 'chopa2709';
 const REPO     = 'appium-boilerplate';
 const WORKFLOW = 'e2e-android-hotel.yml';
 const ALLURE_URL = 'https://chopa2709.github.io/appium-boilerplate/';
-const DIFF_URL   = 'screenshot-diff.html';
+const ARTIFACT_NAME = 'allure-results-ios';
 
-// ── token ────────────────────────────────────────────────────────────────────
 const tokenInput = document.getElementById('token');
 const saved = localStorage.getItem('gh-token');
 if (saved) tokenInput.value = saved;
@@ -122,7 +173,6 @@ function saveToken() {
   setTimeout(() => tokenInput.style.borderColor = '', 1500);
 }
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function log(msg, cls = '') {
@@ -135,37 +185,23 @@ function log(msg, cls = '') {
 }
 
 function setStatus(text, badgeClass, msg = '') {
-  const badge = document.getElementById('badge');
-  badge.textContent = text;
-  badge.className = 'badge ' + badgeClass;
+  document.getElementById('badge').textContent = text;
+  document.getElementById('badge').className = 'badge ' + badgeClass;
   document.getElementById('progress-msg').textContent = msg;
   document.getElementById('status').className = 'card visible';
 }
 
-function setLinks(runUrl, showDiff) {
+function setLinks(runUrl) {
   const area = document.getElementById('links');
   area.innerHTML = '';
-
   const allure = document.createElement('a');
-  allure.href = ALLURE_URL;
-  allure.target = '_blank';
+  allure.href = ALLURE_URL; allure.target = '_blank';
   allure.className = 'link-btn link-btn-allure';
   allure.innerHTML = '<span class="link-icon">📊</span> Allure レポートを開く';
   area.appendChild(allure);
-
-  if (showDiff) {
-    const diff = document.createElement('a');
-    diff.href = DIFF_URL;
-    diff.target = '_blank';
-    diff.className = 'link-btn link-btn-diff';
-    diff.innerHTML = '<span class="link-icon">🖼️</span> スクリーンショット比較を開く';
-    area.appendChild(diff);
-  }
-
   if (runUrl) {
     const run = document.createElement('a');
-    run.href = runUrl;
-    run.target = '_blank';
+    run.href = runUrl; run.target = '_blank';
     run.className = 'link-btn link-btn-run';
     run.innerHTML = '<span class="link-icon">⚙️</span> GitHub Actions ログを開く';
     area.appendChild(run);
@@ -185,84 +221,196 @@ function ghFetch(token, path, opts = {}) {
   });
 }
 
-// ── main ─────────────────────────────────────────────────────────────────────
+// ── テスト実行 ────────────────────────────────────────────────────────────────
 async function runTests() {
   const token = tokenInput.value.trim();
   if (!token) { alert('GitHub Token を入力してください'); return; }
   localStorage.setItem('gh-token', token);
 
-  const btn       = document.getElementById('run-btn');
-  const spinner   = document.getElementById('spinner');
-  const runLabel  = document.getElementById('run-label');
+  const btn = document.getElementById('run-btn');
+  const spinner = document.getElementById('run-spinner');
+  const label = document.getElementById('run-label');
   document.getElementById('log').innerHTML = '';
   document.getElementById('links').innerHTML = '';
-
-  btn.disabled = true;
-  spinner.style.display = 'block';
-  runLabel.textContent = '実行中…';
+  btn.disabled = true; spinner.style.display = 'block'; label.textContent = '実行中…';
 
   try {
-    // 1. dispatch 前の既存 run ID を記録
     setStatus('実行中', 'badge-running', 'ワークフローを起動しています…');
     const runsEndpoint = `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?per_page=10&event=workflow_dispatch`;
-    const existingRes = await ghFetch(token, runsEndpoint);
-    const existingData = await existingRes.json();
-    const existingIds = new Set((existingData.workflow_runs ?? []).map(r => r.id));
+    const existingIds = new Set((await (await ghFetch(token, runsEndpoint)).json()).workflow_runs?.map(r => r.id) ?? []);
 
-    // 2. ワークフロー起動
     log('ワークフロー dispatch 送信中…', 'info');
-    const dispatchRes = await ghFetch(token,
-      `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ref: 'main' }),
-      }
-    );
-    if (!dispatchRes.ok) {
-      const msg = await dispatchRes.text();
-      throw new Error(`dispatch 失敗 (${dispatchRes.status}): ${msg}`);
-    }
+    const dr = await ghFetch(token, `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' }),
+    });
+    if (!dr.ok) throw new Error(`dispatch 失敗 (${dr.status}): ${await dr.text()}`);
     log('ワークフロー起動しました。実行開始を待っています…', 'info');
 
-    // 3. 既存 ID にない新しい run を検出（最大90秒）
     let run = null;
     for (let i = 0; i < 18; i++) {
       await sleep(5000);
-      const res = await ghFetch(token, runsEndpoint);
-      const data = await res.json();
+      const data = await (await ghFetch(token, runsEndpoint)).json();
       run = (data.workflow_runs ?? []).find(r => !existingIds.has(r.id));
-      if (run) { log(`実行検出: #${run.run_number} (${run.html_url})`, 'info'); break; }
+      if (run) { log(`実行検出: #${run.run_number}`, 'info'); break; }
       log('実行待機中…');
     }
     if (!run) throw new Error('実行を検出できませんでした（タイムアウト）');
 
-    // 3. 完了まで5秒ごとにポーリング
     while (run.status !== 'completed') {
       setStatus('実行中', 'badge-running', `ステータス: ${run.status} — #${run.run_number}`);
       log(`ポーリング中… status=${run.status}`);
       await sleep(5000);
-      const res = await ghFetch(token, `/repos/${OWNER}/${REPO}/actions/runs/${run.id}`);
-      run = await res.json();
+      run = await (await ghFetch(token, `/repos/${OWNER}/${REPO}/actions/runs/${run.id}`)).json();
     }
 
-    // 4. 結果表示
     const ok = run.conclusion === 'success';
-    setStatus(
-      ok ? '✅ 成功' : '❌ 失敗',
-      ok ? 'badge-success' : 'badge-failure',
-      `実行 #${run.run_number} — ${run.conclusion}`
-    );
+    setStatus(ok ? '✅ 成功' : '❌ 失敗', ok ? 'badge-success' : 'badge-failure',
+      `実行 #${run.run_number} — ${run.conclusion}`);
     log(`完了: conclusion=${run.conclusion}`, ok ? '' : 'error');
-    setLinks(run.html_url, true);
+    setLinks(run.html_url);
 
   } catch (e) {
     setStatus('⚠️ エラー', 'badge-unknown', e.message);
     log(e.message, 'error');
   } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
-    runLabel.textContent = '▶ テスト実行';
+    btn.disabled = false; spinner.style.display = 'none'; label.textContent = '▶ テスト実行';
+  }
+}
+
+// ── スクリーンショット比較 ─────────────────────────────────────────────────────
+function closeOverlay() {
+  document.getElementById('overlay').className = '';
+}
+
+function walkSteps(steps, shots) {
+  for (const step of steps) {
+    if (!step.status && step.attachments) {
+      for (const att of step.attachments) {
+        if (att.type === 'image/png') shots.push({ label: step.name, source: att.source });
+      }
+    }
+    if (step.steps?.length) walkSteps(step.steps, shots);
+  }
+}
+
+async function parseZip(zip) {
+  const results = [];
+  const keys = Object.keys(zip.files).filter(k => k.endsWith('-result.json'));
+  for (const k of keys) {
+    const data = JSON.parse(await zip.files[k].async('text'));
+    const shots = [];
+    walkSteps(data.steps ?? [], shots);
+    if (shots.length) results.push({ testName: data.name, shots });
+  }
+  return results;
+}
+
+async function getImg(zip, source) {
+  const key = Object.keys(zip.files).find(k => k.endsWith(source));
+  if (!key) return null;
+  const b64 = await zip.files[key].async('base64');
+  return `data:image/png;base64,${b64}`;
+}
+
+async function downloadZip(token, artifactId) {
+  const res = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/artifacts/${artifactId}/zip`, {
+    cache: 'no-store',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    redirect: 'follow',
+  });
+  if (!res.ok) throw new Error(`Artifact ダウンロード失敗 (${res.status})`);
+  return JSZip.loadAsync(await res.arrayBuffer());
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function openComparison() {
+  const token = tokenInput.value.trim();
+  if (!token) { alert('GitHub Token を入力してください'); return; }
+
+  const btn = document.getElementById('cmp-btn');
+  const spinner = document.getElementById('cmp-spinner');
+  const label = document.getElementById('cmp-label');
+  btn.disabled = true; spinner.style.display = 'block'; label.textContent = '読み込み中…';
+
+  document.getElementById('overlay').className = 'visible';
+  document.getElementById('cmp-body').innerHTML = '<div class="compare-loading">Artifact を取得中…</div>';
+  document.getElementById('cmp-meta').textContent = '';
+
+  try {
+    // 最新2件の artifact を取得
+    const artRes = await ghFetch(token,
+      `/repos/${OWNER}/${REPO}/actions/artifacts?name=${ARTIFACT_NAME}&per_page=10`);
+    const artData = await artRes.json();
+    const artifacts = (artData.artifacts ?? [])
+      .filter(a => !a.expired)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    if (artifacts.length < 2) throw new Error(`有効な Artifact が2件未満です（現在 ${artifacts.length} 件）`);
+
+    const [curr, prev] = artifacts;
+    document.getElementById('cmp-meta').textContent =
+      `前回: #${prev.workflow_run?.run_attempt ?? '?'} ${prev.created_at.slice(0,16)}　今回: #${curr.workflow_run?.run_attempt ?? '?'} ${curr.created_at.slice(0,16)}`;
+
+    document.getElementById('cmp-body').innerHTML = '<div class="compare-loading">zip を展開中…</div>';
+    const [currZip, prevZip] = await Promise.all([
+      downloadZip(token, curr.id),
+      downloadZip(token, prev.id),
+    ]);
+
+    document.getElementById('cmp-body').innerHTML = '<div class="compare-loading">スクリーンショットを解析中…</div>';
+    const [currResults, prevResults] = await Promise.all([parseZip(currZip), parseZip(prevZip)]);
+
+    const allTests = [...new Set([...prevResults.map(r => r.testName), ...currResults.map(r => r.testName)])];
+
+    let html = '';
+    for (const testName of allTests) {
+      const prevTest = prevResults.find(r => r.testName === testName);
+      const currTest = currResults.find(r => r.testName === testName);
+      const allLabels = [...new Set([...(prevTest?.shots ?? []).map(s => s.label), ...(currTest?.shots ?? []).map(s => s.label)])];
+
+      let rows = '';
+      for (const label of allLabels) {
+        const ps = prevTest?.shots.find(s => s.label === label);
+        const cs = currTest?.shots.find(s => s.label === label);
+        const [pImg, cImg] = await Promise.all([
+          ps ? getImg(prevZip, ps.source) : Promise.resolve(null),
+          cs ? getImg(currZip, cs.source) : Promise.resolve(null),
+        ]);
+        rows += `<tr>
+          <td class="step-label">${esc(label)}</td>
+          <td class="shot">${pImg ? `<img src="${pImg}">` : '<div class="missing">（なし）</div>'}</td>
+          <td class="shot">${cImg ? `<img src="${cImg}">` : '<div class="missing">（なし）</div>'}</td>
+        </tr>`;
+      }
+
+      html += `<div class="compare-section">
+        <h3>${esc(testName)}</h3>
+        <table class="compare-table">
+          <thead><tr>
+            <th style="width:130px">ステップ</th>
+            <th>前回</th>
+            <th>今回</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }
+
+    document.getElementById('cmp-body').innerHTML = html;
+
+  } catch (e) {
+    document.getElementById('cmp-body').innerHTML =
+      `<div class="compare-loading" style="color:#dc2626">エラー: ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false; spinner.style.display = 'none';
+    label.textContent = '🖼️ スクリーンショット比較（最新2件）';
   }
 }
 </script>
