@@ -1,71 +1,29 @@
-import AllureReporter from '@wdio/allure-reporter';
-import { Status } from 'allure-js-commons';
 import HotelLoginPage from '../pageobjects/hotel.login.page.js';
-
-async function step (name: string, fn: () => Promise<void>) {
-    AllureReporter.startStep(name);
-    try {
-        await fn();
-        AllureReporter.endStep(Status.PASSED);
-    } catch (e) {
-        AllureReporter.endStep(Status.FAILED);
-        throw e;
-    }
-}
+import { loginAs, logout, PREMIUM_USER } from '../helpers/hotel.auth.js';
+import { step } from '../helpers/step.js';
 
 describe('ホテルサイト ログイン', () => {
     it('正しい認証情報でログインするとマイページに遷移する', async () => {
-        await step('トップページにアクセスする', async () => {
-            await HotelLoginPage.openTopPage();
-            await HotelLoginPage.takeScreenshot('1_トップページ');
-        });
-
-        await step('ナビメニューからログインページへ移動する', async () => {
-            await HotelLoginPage.navMenuButton.click();
-            await HotelLoginPage.loginLink.waitForDisplayed({ timeout: 5000 });
-            await HotelLoginPage.loginLink.click();
-            await HotelLoginPage.email.waitForDisplayed({ timeout: 10000 });
-            await HotelLoginPage.takeScreenshot('2_ログインページ');
-        });
-
-        await step('ログイン情報を入力してログインする', async () => {
-            await HotelLoginPage.login({ email: 'jun@example.com', password: 'pa55w0rd!' });
-            await browser.waitUntil(
-                async () => (await browser.getUrl()).includes('mypage.html'),
-                { timeout: 10000 }
-            );
-            await HotelLoginPage.takeScreenshot('3_マイページ');
+        await step('ログインする', async () => {
+            await loginAs(PREMIUM_USER);
+            await HotelLoginPage.takeScreenshot('1_マイページ');
         });
 
         await step('ログアウトする', async () => {
-            await HotelLoginPage.navMenuButton.click();
-            await HotelLoginPage.logoutButton.waitForDisplayed({ timeout: 5000 });
-            await HotelLoginPage.logoutButton.click();
-            await browser.waitUntil(
-                async () => (await browser.getUrl()).includes('index.html'),
-                { timeout: 10000 }
-            );
-            await HotelLoginPage.takeScreenshot('4_トップページ（ログアウト後）');
+            await logout();
+            await HotelLoginPage.takeScreenshot('2_トップページ（ログアウト後）');
         });
     });
 
     it('メールアドレスが空のままログインするとエラーが表示される', async () => {
-        await step('トップページにアクセスする', async () => {
-            await HotelLoginPage.openTopPage();
-            await HotelLoginPage.takeScreenshot('1_トップページ');
-        });
-
-        await step('ナビメニューからログインページへ移動する', async () => {
-            await HotelLoginPage.navMenuButton.click();
-            await HotelLoginPage.loginLink.waitForDisplayed({ timeout: 5000 });
-            await HotelLoginPage.loginLink.click();
-            await HotelLoginPage.email.waitForDisplayed({ timeout: 10000 });
-            await HotelLoginPage.takeScreenshot('2_ログインページ');
+        await step('ログインページを開く', async () => {
+            await HotelLoginPage.open();
+            await HotelLoginPage.takeScreenshot('1_ログインページ');
         });
 
         await step('メールアドレスを空にしてログインを試みる', async () => {
-            await HotelLoginPage.login({ email: '', password: 'pa55w0rd!' });
-            await HotelLoginPage.takeScreenshot('3_エラー表示');
+            await HotelLoginPage.login({ email: '', password: PREMIUM_USER.password });
+            await HotelLoginPage.takeScreenshot('2_エラー表示');
         });
 
         await step('メールアドレスのエラーメッセージを確認する', async () => {
@@ -74,22 +32,14 @@ describe('ホテルサイト ログイン', () => {
     });
 
     it('パスワードが空のままログインするとエラーが表示される', async () => {
-        await step('トップページにアクセスする', async () => {
-            await HotelLoginPage.openTopPage();
-            await HotelLoginPage.takeScreenshot('1_トップページ');
-        });
-
-        await step('ナビメニューからログインページへ移動する', async () => {
-            await HotelLoginPage.navMenuButton.click();
-            await HotelLoginPage.loginLink.waitForDisplayed({ timeout: 5000 });
-            await HotelLoginPage.loginLink.click();
-            await HotelLoginPage.email.waitForDisplayed({ timeout: 10000 });
-            await HotelLoginPage.takeScreenshot('2_ログインページ');
+        await step('ログインページを開く', async () => {
+            await HotelLoginPage.open();
+            await HotelLoginPage.takeScreenshot('1_ログインページ');
         });
 
         await step('パスワードを空にしてログインを試みる', async () => {
-            await HotelLoginPage.login({ email: 'jun@example.com', password: '' });
-            await HotelLoginPage.takeScreenshot('3_エラー表示');
+            await HotelLoginPage.login({ email: PREMIUM_USER.email, password: '' });
+            await HotelLoginPage.takeScreenshot('2_エラー表示');
         });
 
         await step('パスワードのエラーメッセージを確認する', async () => {
