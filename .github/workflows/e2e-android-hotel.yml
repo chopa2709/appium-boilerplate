@@ -1,4 +1,4 @@
-name: iOS Hotel Tests (Remote TestKit)
+name: Hotel Tests (Remote TestKit)
 
 on:
   push:
@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'テスト対象プラットフォーム'
+        required: true
+        default: 'ios'
+        type: choice
+        options:
+          - ios
+          - android
 
 permissions:
   contents: write
@@ -25,8 +34,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run hotel tests on iOS (Remote TestKit)
-        run: npm run rtk.ios.hotel
+      - name: Run hotel tests (Remote TestKit)
+        run: |
+          PLATFORM="${{ github.event.inputs.platform || 'ios' }}"
+          if [ "$PLATFORM" = "android" ]; then
+            npm run rtk.android.hotel
+          else
+            npm run rtk.ios.hotel
+          fi
         env:
           RTK_USERNAME: ${{ secrets.RTK_USERNAME }}
           RTK_ACCESSTOKEN: ${{ secrets.RTK_ACCESSTOKEN }}
@@ -35,13 +50,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results-ios
-          path: allure-results-ios-*
+          name: allure-results-${{ github.event.inputs.platform || 'ios' }}
+          path: allure-results-${{ github.event.inputs.platform || 'ios' }}-*
           retention-days: 30
 
       - name: Generate Allure report
         if: always()
-        run: ./node_modules/.bin/allure generate allure-results-ios-* --clean -o allure-report
+        run: ./node_modules/.bin/allure generate allure-results-${{ github.event.inputs.platform || 'ios' }}-* --clean -o allure-report
 
       - name: Deploy to GitHub Pages
         if: always() && github.ref == 'refs/heads/main'

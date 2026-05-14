@@ -33,6 +33,13 @@
     .btn-run:hover:not(:disabled) { background: #4338ca; }
     .btn-run:disabled { background: #a5b4fc; cursor: not-allowed; }
 
+    .platform-row { display: flex; gap: 12px; }
+    .platform-option { display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+                       border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;
+                       flex: 1; justify-content: center; font-size: 0.9rem; transition: all .15s; }
+    .platform-option:has(input:checked) { border-color: #4f46e5; background: #eff6ff; color: #3730a3; }
+    .platform-option input { display: none; }
+
     .btn-compare { width: 100%; padding: 14px; background: #059669; color: #fff;
                    border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
                    cursor: pointer; transition: background .15s; display: flex;
@@ -115,6 +122,20 @@
     <div class="token-row">
       <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
       <button class="btn-save" onclick="saveToken()">保存</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>プラットフォーム</h2>
+    <div class="platform-row">
+      <label class="platform-option">
+        <input type="radio" name="platform" value="ios" checked>
+        <span>🍎 iOS (Safari)</span>
+      </label>
+      <label class="platform-option">
+        <input type="radio" name="platform" value="android">
+        <span>🤖 Android (Chrome)</span>
+      </label>
     </div>
   </div>
 
@@ -227,23 +248,26 @@ async function runTests() {
   if (!token) { alert('GitHub Token を入力してください'); return; }
   localStorage.setItem('gh-token', token);
 
+  const platform = document.querySelector('input[name="platform"]:checked').value;
+
   const btn = document.getElementById('run-btn');
   const spinner = document.getElementById('run-spinner');
   const label = document.getElementById('run-label');
   document.getElementById('log').innerHTML = '';
   document.getElementById('links').innerHTML = '';
-  btn.disabled = true; spinner.style.display = 'block'; label.textContent = '実行中…';
+  btn.disabled = true; spinner.style.display = 'block';
+  label.textContent = platform === 'ios' ? '🍎 実行中…' : '🤖 実行中…';
 
   try {
-    setStatus('実行中', 'badge-running', 'ワークフローを起動しています…');
+    setStatus('実行中', 'badge-running', `${platform.toUpperCase()} テストを起動しています…`);
     const runsEndpoint = `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?per_page=10&event=workflow_dispatch`;
     const existingIds = new Set((await (await ghFetch(token, runsEndpoint)).json()).workflow_runs?.map(r => r.id) ?? []);
 
-    log('ワークフロー dispatch 送信中…', 'info');
+    log(`ワークフロー dispatch 送信中… (platform=${platform})`, 'info');
     const dr = await ghFetch(token, `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ref: 'main' }),
+      body: JSON.stringify({ ref: 'main', inputs: { platform } }),
     });
     if (!dr.ok) throw new Error(`dispatch 失敗 (${dr.status}): ${await dr.text()}`);
     log('ワークフロー起動しました。実行開始を待っています…', 'info');
@@ -277,6 +301,10 @@ async function runTests() {
   } finally {
     btn.disabled = false; spinner.style.display = 'none'; label.textContent = '▶ テスト実行';
   }
+}
+
+function getSelectedPlatform() {
+  return document.querySelector('input[name="platform"]:checked').value;
 }
 
 // ── スクリーンショット比較 ─────────────────────────────────────────────────────
@@ -344,9 +372,10 @@ async function openComparison() {
   document.getElementById('cmp-meta').textContent = '';
 
   try {
-    // 最新2件の artifact を取得
+    // 最新2件の artifact を取得（選択中の platform に合わせる）
+    const artifactName = `allure-results-${getSelectedPlatform()}`;
     const artRes = await ghFetch(token,
-      `/repos/${OWNER}/${REPO}/actions/artifacts?name=${ARTIFACT_NAME}&per_page=10`);
+      `/repos/${OWNER}/${REPO}/actions/artifacts?name=${artifactName}&per_page=10`);
     const artData = await artRes.json();
     const artifacts = (artData.artifacts ?? [])
       .filter(a => !a.expired)
