@@ -42,7 +42,7 @@
         "notify:slack": "node scripts/notify-slack.mjs"
     },
     "devDependencies": {
-        "@types/sharp": "^0.31.1",
+        "@types/sharp": "^0.32.0",
         "@typescript-eslint/eslint-plugin": "^8.50.1",
         "@typescript-eslint/parser": "^8.50.1",
         "@wdio/allure-reporter": "^9.27.0",
