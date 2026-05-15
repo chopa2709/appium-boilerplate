@@ -54,12 +54,12 @@
         "@wdio/spec-reporter": "^9.27.1",
         "allure-commandline": "^2.40.0",
         "appium": "^3.1.2",
-        "appium-inspector-plugin": "^2025.11.1",
-        "appium-uiautomator2-driver": "^6.7.6",
-        "appium-xcuitest-driver": "^10.13.2",
+        "appium-inspector-plugin": "^2026.5.1",
+        "appium-uiautomator2-driver": "^7.4.0",
+        "appium-xcuitest-driver": "^11.4.2",
         "eslint-plugin-wdio": "^9.16.2",
         "sharp": "^0.34.5",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.3"
+        "typescript": "^6.0.3"
     }
 }
