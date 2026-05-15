@@ -7,6 +7,9 @@ if (!WEBHOOK_URL) {
     process.exit(1);
 }
 
+const ALLURE_URL = process.env.ALLURE_REPORT_URL ?? '';
+const PLATFORM   = process.env.PLATFORM ?? '';
+
 // allure-results/ または allure-results-*/ を探す
 const candidates = ['allure-results', ...fs.readdirSync('.').filter(f => f.startsWith('allure-results-') && fs.statSync(f).isDirectory())];
 const RESULTS_DIR = candidates.find(d => fs.existsSync(d) && fs.readdirSync(d).some(f => f.endsWith('-result.json')));
@@ -17,21 +20,25 @@ if (!RESULTS_DIR) {
 }
 
 const files = fs.readdirSync(RESULTS_DIR).filter(f => f.endsWith('-result.json'));
-
 if (files.length === 0) {
     console.error('allure-results に結果ファイルがありません');
     process.exit(1);
 }
 
-// 結果を suite 別に集計
+// 結果を suite 別に集計 & デバイス名を取得
 const suites = {};
 let totalDurationMs = 0;
+let deviceName = '';
 
 for (const file of files) {
     const result = JSON.parse(fs.readFileSync(path.join(RESULTS_DIR, file), 'utf-8'));
-    const suite = result.labels?.find(l => l.name === 'suite')?.value ?? '(不明)';
+    const suite  = result.labels?.find(l => l.name === 'parentSuite')?.value ?? '(不明)';
     const status = result.status ?? 'unknown';
-    const duration = result.duration ?? 0;
+    const duration = (result.stop ?? 0) - (result.start ?? 0);
+
+    if (!deviceName) {
+        deviceName = result.labels?.find(l => l.name === 'device_name')?.value ?? '';
+    }
 
     if (!suites[suite]) suites[suite] = { passed: 0, total: 0 };
     suites[suite].total++;
@@ -51,25 +58,31 @@ const durationStr = durationSec >= 60
 const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
 const icon = allPassed ? '✅' : '❌';
 
+// プラットフォーム表示
+const platformIcon = PLATFORM.toLowerCase() === 'ios' ? '🍎 iOS' : PLATFORM.toLowerCase() === 'android' ? '🤖 Android' : '';
+const platformStr  = [platformIcon, deviceName].filter(Boolean).join(' / ');
+
 const lines = Object.entries(suites).map(([suite, { passed, total }]) => {
     const mark = passed === total ? '✅' : '❌';
     return `${mark} ${suite.padEnd(24)} ${passed}/${total} passed`;
 });
 
+const footer = ALLURE_URL
+    ? `合計: ${totalPassed}/${totalCount} passed  ⏱ ${durationStr}\n📊 <${ALLURE_URL}|Allure レポート>`
+    : `合計: ${totalPassed}/${totalCount} passed  ⏱ ${durationStr}`;
+
 const text = [
-    `${icon} *テスト結果* ${now}`,
+    `${icon} *テスト結果* ${now}${platformStr ? `  |  ${platformStr}` : ''}`,
     '─'.repeat(36),
     ...lines,
     '─'.repeat(36),
-    `合計: ${totalPassed}/${totalCount} passed  ⏱ ${durationStr}`,
+    footer,
 ].join('\n');
-
-const payload = { text };
 
 const res = await fetch(WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ text }),
 });
 
 if (res.ok) {

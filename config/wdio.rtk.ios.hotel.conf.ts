@@ -2,6 +2,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as baseConfig } from './wdio.shared.conf.js';
 import { RtkDeviceService } from './rtk-device.service.js';
+import AllureReporter from '@wdio/allure-reporter';
 
 // Remote TestKit は自己署名証明書を使用しているため SSL 検証をスキップ
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -41,6 +42,13 @@ export const config: WebdriverIO.Config = {
     // validateCapabilities は node_modules/webdriver/build/node.js にパッチ済み:
     // accessToken / userName / password を W3C バリデーション対象外に除外している
     // appium:deviceName / platformVersion / udid は RtkDeviceService が onPrepare で設定する
+    before: async (capabilities) => {
+        const deviceName = (capabilities as Record<string, unknown>)['appium:deviceName'] as string | undefined;
+        if (deviceName) {
+            AllureReporter.addLabel('device_name', deviceName);
+        }
+    },
+
     capabilities: [
         {
             platformName: 'iOS',
