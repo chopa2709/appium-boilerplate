@@ -1,0 +1,4 @@
+{
+  "using": "xpath",
+  "value": "//*[@id=\"success-modal\"]/div/div/div[3]/button"
+}

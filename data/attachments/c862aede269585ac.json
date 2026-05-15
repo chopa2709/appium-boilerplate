@@ -1,0 +1,4 @@
+{
+  "using": "xpath",
+  "value": "./option[. = \"電話でのご連絡\"]|./option[normalize-space(text()) = \"電話でのご連絡\"]|./optgroup/option[. = \"電話でのご連絡\"]|./optgroup/option[normalize-space(text()) = \"電話でのご連絡\"]"
+}

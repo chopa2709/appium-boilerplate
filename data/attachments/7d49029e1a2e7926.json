@@ -1,0 +1,9 @@
+{
+  "script": "\n            function webdriverioPolyfill() {\n  var __defProp = Object.defineProperty;\n  var __name = function(target, _value) {\n    return __defProp(target, \"name\", { value: _value, configurable: true });\n  };\n  var __globalThis = typeof globalThis === \"object\" && globalThis || typeof window === \"object\" && window;\n  __globalThis.__name = __name;\n}\n            webdriverioPolyfill();\n            return (function(elem) {\n      try {\n        const style = window.getComputedStyle(elem);\n        return { value: style?.display ?? \"\" };\n      } catch {\n        if (typeof elem.isConnected === \"boolean\" && !elem.isConnected) {\n          throw new Error(\"stale element reference: element is not attached to the page document\");\n        }\n        return { value: \"\" };\n      }\n    }).apply(null, arguments)\n        ",
+  "args": [
+    {
+      "element-6066-11e4-a52e-4f735466cecf": "f.CE4EA54C49AA35387F7EDDCD11BC36D7.d.502DD4A4D375E66303167BA306E40117.e.54",
+      "ELEMENT": "f.CE4EA54C49AA35387F7EDDCD11BC36D7.d.502DD4A4D375E66303167BA306E40117.e.54"
+    }
+  ]
+}
