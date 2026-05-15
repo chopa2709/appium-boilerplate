@@ -1,4 +1,0 @@
-{
-  "using": "xpath",
-  "value": "//*[@id=\"navbarNav\"]/ul/li[2]/a"
-}
