@@ -38,7 +38,8 @@
         "ios.browser": "wdio run config/wdio.ios.browser.conf.ts",
         "lint": "eslint config tests",
         "appium:inspector": "npx start-appium-inspector",
-        "allure:hotel": "npm run android.hotel -- --spec tests/specs/hotel.reserve.spec.ts --logLevel error && npx allure generate allure-results --clean -o allure-report-latest && npx allure open allure-report-latest"
+        "allure:hotel": "npm run android.hotel -- --spec tests/specs/hotel.reserve.spec.ts --logLevel error && npx allure generate allure-results --clean -o allure-report-latest && npx allure open allure-report-latest",
+        "notify:slack": "node scripts/notify-slack.mjs"
     },
     "devDependencies": {
         "@types/sharp": "^0.31.1",
