@@ -1,0 +1,15 @@
+{
+  "script": "\n            function webdriverioPolyfill() {\n  var __defProp = Object.defineProperty;\n  var __name = function(target, _value) {\n    return __defProp(target, \"name\", { value: _value, configurable: true });\n  };\n  var __globalThis = typeof globalThis === \"object\" && globalThis || typeof window === \"object\" && window;\n  __globalThis.__name = __name;\n}\n            webdriverioPolyfill();\n            return (function checkVisibility(elem, params) {\n      if (typeof elem.checkVisibility === \"function\") {\n        return elem.checkVisibility(params);\n      }\n      return null;\n    }).apply(null, arguments)\n        ",
+  "args": [
+    {
+      "element-6066-11e4-a52e-4f735466cecf": "f.897D1C00C1438FB3B8EE14CB1C4BCF34.d.67EC632452597A08F00290E6CFFA8ACA.e.48",
+      "ELEMENT": "f.897D1C00C1438FB3B8EE14CB1C4BCF34.d.67EC632452597A08F00290E6CFFA8ACA.e.48"
+    },
+    {
+      "withinViewport": false,
+      "contentVisibilityAuto": true,
+      "opacityProperty": true,
+      "visibilityProperty": true
+    }
+  ]
+}
