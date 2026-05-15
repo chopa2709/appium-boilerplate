@@ -39,8 +39,9 @@ export const config: WebdriverIO.Config = {
         }] as any,
     ],
 
-    before: async (capabilities) => {
-        const deviceName = (capabilities as Record<string, unknown>)['appium:deviceName'] as string | undefined;
+    before: async (_capabilities, _specs, browser) => {
+        const cap = browser.capabilities as Record<string, unknown>;
+        const deviceName = (cap['appium:deviceName'] ?? cap['deviceName']) as string | undefined;
         if (deviceName) {
             AllureReporter.addLabel('device_name', deviceName);
         }

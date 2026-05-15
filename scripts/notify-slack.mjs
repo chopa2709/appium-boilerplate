@@ -10,16 +10,21 @@ if (!WEBHOOK_URL) {
 const ALLURE_URL = process.env.ALLURE_REPORT_URL ?? '';
 const PLATFORM   = process.env.PLATFORM ?? '';
 
-// allure-results/ または allure-results-*/ を探す
-const candidates = ['allure-results', ...fs.readdirSync('.').filter(f => f.startsWith('allure-results-') && fs.statSync(f).isDirectory())];
-const RESULTS_DIR = candidates.find(d => fs.existsSync(d) && fs.readdirSync(d).some(f => f.endsWith('-result.json')));
+// allure-results/ および allure-results-*/ を全て対象にする
+const allDirs = ['allure-results', ...fs.readdirSync('.').filter(f => f.startsWith('allure-results-') && fs.statSync(f).isDirectory())];
+const resultsDirs = allDirs.filter(d => fs.existsSync(d) && fs.readdirSync(d).some(f => f.endsWith('-result.json')));
 
-if (!RESULTS_DIR) {
+if (resultsDirs.length === 0) {
     console.error('allure-results ディレクトリが見つかりません');
     process.exit(1);
 }
 
-const files = fs.readdirSync(RESULTS_DIR).filter(f => f.endsWith('-result.json'));
+console.log('読み込むディレクトリ:', resultsDirs);
+
+const files = resultsDirs.flatMap(d =>
+    fs.readdirSync(d).filter(f => f.endsWith('-result.json')).map(f => path.join(d, f))
+);
+
 if (files.length === 0) {
     console.error('allure-results に結果ファイルがありません');
     process.exit(1);
@@ -31,7 +36,7 @@ let totalDurationMs = 0;
 let deviceName = '';
 
 for (const file of files) {
-    const result = JSON.parse(fs.readFileSync(path.join(RESULTS_DIR, file), 'utf-8'));
+    const result = JSON.parse(fs.readFileSync(file, 'utf-8'));
     const suite  = result.labels?.find(l => l.name === 'parentSuite')?.value ?? '(不明)';
     const status = result.status ?? 'unknown';
     const duration = (result.stop ?? 0) - (result.start ?? 0);

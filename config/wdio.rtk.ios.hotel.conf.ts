@@ -42,8 +42,9 @@ export const config: WebdriverIO.Config = {
     // validateCapabilities は node_modules/webdriver/build/node.js にパッチ済み:
     // accessToken / userName / password を W3C バリデーション対象外に除外している
     // appium:deviceName / platformVersion / udid は RtkDeviceService が onPrepare で設定する
-    before: async (capabilities) => {
-        const deviceName = (capabilities as Record<string, unknown>)['appium:deviceName'] as string | undefined;
+    before: async (_capabilities, _specs, browser) => {
+        const cap = browser.capabilities as Record<string, unknown>;
+        const deviceName = (cap['appium:deviceName'] ?? cap['deviceName']) as string | undefined;
         if (deviceName) {
             AllureReporter.addLabel('device_name', deviceName);
         }
